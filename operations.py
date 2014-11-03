@@ -1,49 +1,109 @@
 import basic
 import functions
 
-def der_Basic(var):
+def expand(arg):
+	# mul of add
+	# mul to pow
+	# add to pow
+	pass
 
-	return 0
+def sim_Basic(self):
+	return self
 
-def der_Var(self,var):
-    if var==self:
-        return 1
-    else:
-        return basic.Var('(dy/dx)')
+def sim_Pow(self):
+	base = simplify(self.left); exp = simplify(self.right)
 
-def der_Constant(self,var):
-	
-	return 0
+	if isinstance(type(base),basic.Pow):
+		exp = exp*base.right; base = base.left
+	else:
+		return base**exp
+	return simplify(base)**simplify(exp)
 
-def der_Pow(self, var):
-    from functions import log
-    f = self.left; g = self.right
-    return f**(g-1)*g*derivative(f,var=var)+f*functions.log(f)*derivative(g,var=var)
+def multexpand(arg):
+	mult = 1; new = []
+	if isinstance(arg,basic.Mul):
+		arg = arg.elements
+	else:
+		arg = [arg]
+	for i in arg:
+		if isinstance(i, (int, long, float)):
+			mult *= i
+		else:
+			new += [i] # potentially add recursion here to make copy
+	return mult,basic.Mul(new)
 
-def der_Add(self,var):
+def sim_Add(self):
+	array = [simplify(i) for i in self.elements]; arrayNew = []
+	while len(array)>0:
+		i = array[0]
+		if isinstance(i,basic.Add):
+			array = i.elements+array[1:]; continue
+		mult_i,new_i = multexpand(i)
+		done = False
+		for j in arrayNew:
+			mult_j,new_j = multexpand(j)
+			if sort(new_i)==sort(new_j):
+				if mult_i-mult_j!=0:
+					arrayNew[arrayNew.index(j)] = (mult_i+mult_j)*new_j # simplify?
+				else:
+					arrayNew.remove(j) 
+				done = True; break
+		if not done: # and i!=0  ?
+			arrayNew += [i]
+		array = array[1:]
+	if len(arrayNew)==0: return 0
+	return basic.Add(arrayNew)
 
-    return sum([derivative(i,var) for i in self.elements])
+def powexpand(arg):
+	if isinstance(arg,basic.Pow):
+		return arg.left,arg.right
+	return arg,1
 
-def der_Mul(self,var):
-    
-    return self[0]
+def sim_Mul(arg):
+	array = [simplify(i) for i in arg.elements]; arrayNew = []
+	while len(array)>0:
+		i = array[0]
+		if isinstance(i,basic.Mul):
+			array = i.elements+array[1:]; continue
+		base_i,exp_i = powexpand(i)
+		done = False
+		for j in arrayNew:
+			base_j,exp_j = powexpand(j)
+			mult_i,new_i = multexpand(base_i); mult_j,new_j = multexpand(base_j)
+			if sort(new_i) == sort(new_j):
+				if exp_i+exp_j!=0:
+					if new_i==1 and mult_i==mult_j:
+						new_i = mult_i; mult_i=1;mult_j=1
+					arrayNew[arrayNew.index(j)] = (mult_i**exp_i*mult_j**exp_j)*new_i**(exp_i+exp_j)
+				else:
+					arrayNew.remove(j)
+				done = True; break
+		if not done: # and i!=0  ?
+			arrayNew += [i]
+		array = array[1:]
+	if len(arrayNew)==0: return 1
+	return basic.Mul(arrayNew)
 
-basic.Basic.derivative = der_Basic
-basic.Var.derivative = der_Var
-basic.Constant.derivative = der_Constant
-basic.Pow.derivative = der_Pow
-basic.Add.derivative = der_Add
-basic.Mul.derivative = der_Mul
+basic.Basic.simplify = sim_Basic
+basic.Var.simplify = sim_Basic
+basic.Constant.simplify = sim_Basic
+basic.Pow.simplify = sim_Pow
+basic.Add.simplify = sim_Add
+basic.Mul.simplify = sim_Mul
+# basic.Equation.simplify = 
 
+def simplify(arg):
+	if issubclass(type(arg),basic.Basic):
+		return arg.simplify()
+	return arg
 
-def der_log(self,var):
-    
-    return 1/self.arg
-
-functions.log.derivative = der_log
-
-
-def derivative(arg, var=basic.Var('x')):
-    if issubclass(type(arg),basic.Basic):
-        return arg.derivative(var)
-    return 0
+def sort(arg):
+	if isinstance(arg,basic.Pow):
+		return sort(arg.left)**sort(arg.right)
+	elif isinstance(arg,(basic.Add,basic.Mul)):
+		return type(arg)(sorted([sort(i) for i in arg.elements]))
+	elif isinstance(arg,basic.Equation):
+		return Equation(sort(arg.left),sort(arg.right))
+	elif isinstance(arg,functions.Function):
+		return type(arg)(sort(arg.arg))
+	return arg
