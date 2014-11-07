@@ -42,9 +42,19 @@ basic.Equation.derivative = der_Equation
 
 def der_log(self,var):
     
-    return 1/self.arg
+    return derivative(self.arg)/self.arg
+
+def der_sin(self,var):
+
+    return derivative(self.arg)*functions.cos(self.arg)
+
+def der_cos(self,var):
+
+    return -derivative(self.arg)*functions.sin(self.arg)
 
 functions.log.derivative = der_log
+functions.sin.derivative = der_sin
+functions.cos.derivative = der_cos
 
 
 def derivative(arg, var=basic.Var('x')):

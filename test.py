@@ -1,24 +1,21 @@
-from basic 					import Var,Constant
-from functions 				import log
+from basic 					import Var,Constant,Equation
+from functions 				import log,sin,cos
 from calculus.derivatives 	import derivative
-from operations 			import expand, sort, simplify
-# import math
-
-# print derivative(x**2**x)
+from operations 			import expand, sort, simplify, sim, evaluate
+from calculus.linearAlgebra import Matrix,Vector
 
 x = Var('x')
 
-# print derivative(x**2**x)
-# print derivative(45+x**2+x+1)
+# a = Matrix([1,2,3],[4,5,6],[7,8,9])
+b = Matrix([x,x**2,x**3])
 
-# print derivative(2-x*(x+x)*(x+x*(x+2*x)+2)*2+2)
-
-
-# a = 2-x*(x+x)*(x+x*(x+2*x)+2)*2+2
-# print derivative(a)
 # print a
+# print b
+# print b+Matrix([3,4,5])
 
-a = Constant('a')
-b = Constant('b')
+c = Matrix([1],[4],[7])
 
-print sort(simplify(derivative(a*x**b/log(x))))
+d = Matrix([1,2,3],[4,5,6],[7,8,9])
+
+# print b.dot(c)
+print Matrix([4,1,2],[-1,0,.5],[0,4,1])*Matrix([7,-1,0],[6,4,3],[-8,0,2])
