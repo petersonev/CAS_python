@@ -5,10 +5,10 @@ import basic
 # 	Creation, addition, multiplication, positive powers, row echelon, reduced row echelon
 # 	Access row/col/pos/size, division by constants
 # 	Zeros matrix, identity matrix
+# 	Augment, inverse
 # Vector
 # 	Creation, addition, multiplication, dot product
 # 	Return magnitude/normal vector
-# 	Augment, inverse
 
 # TODO
 # Matrix

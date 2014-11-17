@@ -3,22 +3,22 @@ import functions
 
 def der_Basic(var):
 
-	return 0
+	return Num(0)
 
 def der_Var(self,var):
     if var==self:
-        return 1
+        return Num(1)
     else:
         return basic.Var('(dy/dx)')
 
 def der_Constant(self,var):
 	
-	return 0
+	return Num(0)
 
 def der_Pow(self, var):
     from functions import log
     f = self.left; g = self.right
-    return f**(g-1)*g*derivative(f,var=var)+f**g*functions.log(f)*derivative(g,var=var)
+    return f**(g-Num(1))*g*derivative(f,var=var)+f**g*functions.log(f)*derivative(g,var=var)
 
 def der_Add(self,var):
 
@@ -60,4 +60,4 @@ functions.cos.derivative = der_cos
 def derivative(arg, var=basic.Var('x')):
     if issubclass(type(arg),basic.Basic):
         return arg.derivative(var)
-    return 0
+    return Num(0)

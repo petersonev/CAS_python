@@ -29,10 +29,10 @@ class Basic(object):
     def __sub__ (self, other): return Add(self,-other)
     def __rsub__(self, other): return Add(other,-self)
 
-    def __div__ (self,other):  return (self*other**-1)
-    def __rdiv__(self,other):  return (other*self**-1)
+    def __div__ (self,other):  return (self*other**Num(-1))
+    def __rdiv__(self,other):  return (other*self**Num(-1))
 
-    def __neg__ (self):        return (-1*self)
+    def __neg__ (self):        return (Num(-1)*self)
 
     def __pow__ (self,other):  return Pow(self,other)
     def __rpow__(self,other):  return Pow(other,self)
@@ -61,6 +61,22 @@ class Var(Basic):
     def __eq__(self, other):
         return (type(self) == type(other) and self.name == other.name and
                 self.units == other.units and self.value == other.value)
+
+class Num(Basic):
+    import fractions
+
+    def __init__(self,value):
+        self.value = float(value)
+
+    def __eq__(self,other):
+        if type(self)==type(other):
+            return self.value==other.value
+        return self.value==other
+
+    def __repr__(self):
+        if self.value.is_integer():
+            return str(int(self.value))
+        return str(self.value)
 
 class Constant(Var):
 

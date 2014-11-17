@@ -21,7 +21,7 @@ class log(Function):
         Function.__init__(self,'log',arg)
     def __new__(self,arg):
         if arg==e:
-            return 1
+            return Num(1)
         return Function.__new__(self,arg)
 
 class sin(Function):
@@ -29,9 +29,9 @@ class sin(Function):
         Function.__init__(self,'sin',arg)
     def __new__(self,arg):
         if arg==pi:
-            return 0
+            return Num(0)
         if arg==pi/2:
-            return 1
+            return Num(1)
         return Function.__new__(self,arg)
 
 class cos(Function):
@@ -39,7 +39,7 @@ class cos(Function):
         Function.__init__(self,'cos',arg)
     def __new__(self,arg):
         if arg==pi:
-            return 1
+            return Num(1)
         if arg==pi/2:
-            return 0
+            return Num(0)
         return Function.__new__(self,arg)

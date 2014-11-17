@@ -13,7 +13,7 @@ def expand(arg):
 				new += [i]; old = old[1:]
 		return basic.Mul(new)
 	elif isinstance(arg,basic.Pow):
-		if isinstance(arg.left,basic.Add) and isinstance(arg.right,(int,long,float)) and arg.right%1==0:
+		if isinstance(arg.left,basic.Add) and isinstance(arg.right,basic.Num) and arg.right.value.is_integer():
 			return expand(basic.Mul([arg.left]*arg.right))
 		elif isinstance(arg.left,basic.Mul):
 			return basic.Mul([expand(i**arg.right) for i in arg.left.elements])
@@ -30,6 +30,8 @@ def sim_Pow(self):
 	base = simplify(self.left); exp = simplify(self.right)
 	if isinstance(base,basic.Pow):
 		exp = exp*base.right; base = base.left
+	elif isinstance(base,basic.Num) and isinstance(exp,basic.Num) and exp.value.is_integer() and exp.value>=0:
+		return basic.Num(base.value**exp.value)	# change so only happense when exp is integer and positive
 	else:
 		return base**exp
 	return simplify(base)**simplify(exp)
@@ -41,11 +43,11 @@ def multexpand(arg):
 	else:
 		arg = [arg]
 	for i in arg:
-		if isinstance(i, (int, long, float)):
-			mult *= i
+		if isinstance(i, basic.Num):
+			mult *= i.value
 		else:
 			new += [i] # potentially add recursion here to make copy
-	return mult,basic.Mul(new)
+	return basic.Num(mult),basic.Mul(new)
 
 def sim_Add(self):
 	array = [simplify(i) for i in self.elements]; arrayNew = []
@@ -56,6 +58,10 @@ def sim_Add(self):
 		mult_i,new_i = multexpand(i)
 		done = False
 		for j in arrayNew:
+			if isinstance(i,basic.Num) and isinstance(j,basic.Num):
+				arrayNew[arrayNew.index(j)] = basic.Num(i.value+j.value)
+				done = True; break
+
 			mult_j,new_j = multexpand(j)
 			if sort(expand(new_i))==sort(expand(new_j)):
 				if mult_i+mult_j!=0:
@@ -66,13 +72,13 @@ def sim_Add(self):
 		if not done: # and i!=0  ?
 			arrayNew += [i]
 		array = array[1:]
-	if len(arrayNew)==0: return 0
+	if len(arrayNew)==0: return Num(0)
 	return basic.Add(arrayNew)
 
 def powexpand(arg):
 	if isinstance(arg,basic.Pow):
 		return arg.left,arg.right
-	return arg,1
+	return arg,basic.Num(1)
 
 def sim_Mul(self):
 	array = [simplify(i) for i in self.elements]; arrayNew = []
@@ -86,17 +92,23 @@ def sim_Mul(self):
 		if i==1:
 			array = array[1:]; continue
 		for j in arrayNew:
+			if isinstance(i,basic.Num) and isinstance(j,basic.Num):
+				arrayNew[arrayNew.index(j)] = basic.Num(i.value*j.value)
+				done = True; break
+
 			base_j,exp_j = powexpand(j)
 			mult_j,new_j = multexpand(base_j)
 			if sort(expand(new_i)) == sort(expand(new_j)):
 				if exp_i+exp_j!=0:
 					if new_i==1 and mult_i==mult_j:
 						new_i = mult_i; mult_i=1;mult_j=1
-					new = (mult_i**exp_i*mult_j**exp_j)*new_i**(exp_i+exp_j)
+					new = simplify((mult_i**exp_i*mult_j**exp_j)*new_i**(exp_i+exp_j))
 					if new==1:
 						arrayNew.remove(j)
 					elif new==0:
-						return 0
+						return Num(0)
+					# elif isinstance(new.left,basic.Num) and isinstance(new.right,basic.Num):
+					# 	arrayNew[arrayNew.index(j)] = New(new.left.value**new.right.value)
 					else:
 						arrayNew[arrayNew.index(j)] = new
 				else:
@@ -105,7 +117,7 @@ def sim_Mul(self):
 		if not done: # and i!=0  ?
 			arrayNew += [i]
 		array = array[1:]
-	if len(arrayNew)==0: return 1
+	if len(arrayNew)==0: return Num(1)
 	return basic.Mul(arrayNew)
 
 # def sim_Equation(self):
@@ -224,6 +236,8 @@ def evaluate(expr,*args):
 		return type(expr)(evaluate(expr.left,*args),evaluate(expr.right,*args))
 	elif isinstance(expr,functions.Function):
 		return expr.evaluate()
+	elif isinstance(expr,basic.Num):
+		return expr.value
 	return expr
 
 
