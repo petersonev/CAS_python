@@ -1,4 +1,23 @@
-from __future__ import absolute_import
+# from __future__ import absolute_import
+
+# COMPLETED
+# Basic
+#   Creation, Addition/subtraction, multiplication/division, powers, negative
+#   Sort placeholder
+# Equation
+#   Creation
+# Var
+#   Creation with name/units/value, equals
+# Constant
+#   Same as Var
+# Operator
+#   Creation, equals, sort
+# Pow
+#   Creation
+#   Simplify to 1 or base upon creation
+# OperatorList
+#   Creation, equals
+#   
 
 class Basic(object):
     def __add__ (self, other): return Add(self, other)
