@@ -5,7 +5,7 @@ def expand(arg):
 	if isinstance(arg,basic.Mul):
 		old = copy(arg).elements; new = []
 		while len(old)>0:
-			i = old[0]
+			i = expand(old[0])
 			if isinstance(i,basic.Add):
 				old = old[1:]
 				return basic.Add([expand(basic.Mul(new+[j]+old)) for j in i.elements])
@@ -32,6 +32,7 @@ def sim_Pow(self):
 		exp = exp*base.right; base = base.left
 	elif isinstance(base,basic.Num) and isinstance(exp,basic.Num) and exp.value.is_integer() and exp.value>=0:
 		return basic.Num(base.value**exp.value)	# change so only happense when exp is integer and positive
+	# elif isinstance(base,Mul) and 
 	else:
 		return base**exp
 	return simplify(base)**simplify(exp)
@@ -51,6 +52,7 @@ def multexpand(arg):
 
 def sim_Add(self):
 	array = [simplify(i) for i in self.elements]; arrayNew = []
+	# print array
 	while len(array)>0:
 		i = array[0]
 		if isinstance(i,basic.Add):
@@ -63,8 +65,10 @@ def sim_Add(self):
 				done = True; break
 
 			mult_j,new_j = multexpand(j)
+			print new_i,'~~',new_j,':',mult_i,mult_j
+			# print sort(expand(new_i))==sort(expand(new_j))
 			if sort(expand(new_i))==sort(expand(new_j)):
-				if mult_i+mult_j!=0:
+				if mult_i.value+mult_j.value!=0: # Make sure mult are Num class
 					arrayNew[arrayNew.index(j)] = (mult_i+mult_j)*new_j # simplify?
 				else:
 					arrayNew.remove(j) 
@@ -72,7 +76,8 @@ def sim_Add(self):
 		if not done: # and i!=0  ?
 			arrayNew += [i]
 		array = array[1:]
-	if len(arrayNew)==0: return Num(0)
+	if len(arrayNew)==0: return basic.Num(0)
+	# return
 	return basic.Add(arrayNew)
 
 def powexpand(arg):
@@ -82,6 +87,7 @@ def powexpand(arg):
 
 def sim_Mul(self):
 	array = [simplify(i) for i in self.elements]; arrayNew = []
+	# print array
 	while len(array)>0:
 		i = array[0]
 		if isinstance(i,basic.Mul):
@@ -91,6 +97,7 @@ def sim_Mul(self):
 		done = False
 		if i==1:
 			array = array[1:]; continue
+		# print arrayNew, i
 		for j in arrayNew:
 			if isinstance(i,basic.Num) and isinstance(j,basic.Num):
 				arrayNew[arrayNew.index(j)] = basic.Num(i.value*j.value)
@@ -98,15 +105,20 @@ def sim_Mul(self):
 
 			base_j,exp_j = powexpand(j)
 			mult_j,new_j = multexpand(base_j)
+			# print '- ',base_i, exp_i, mult_i, new_i
+			# print '--',base_j, exp_j, mult_j, new_j
 			if sort(expand(new_i)) == sort(expand(new_j)):
 				if exp_i+exp_j!=0:
 					if new_i==1 and mult_i==mult_j:
 						new_i = mult_i; mult_i=1;mult_j=1
-					new = simplify((mult_i**exp_i*mult_j**exp_j)*new_i**(exp_i+exp_j))
+					#new = ((mult_i**exp_i*mult_j**exp_j)*new_i)**(simplify(exp_i+exp_j)) # Add simplify here
+					new = (mult_i**exp_i*mult_j**exp_j)*new_i**(simplify(exp_i+exp_j))
+					# print '*',(mult_i**exp_i*mult_j**exp_j)*new_i,'^',simplify(exp_i+exp_j)
+					# print '*',(simplify(mult_i**exp_i)*simplify(mult_j**exp_j)),'*',new_i**(simplify(exp_i+exp_j))
 					if new==1:
 						arrayNew.remove(j)
 					elif new==0:
-						return Num(0)
+						return basic.Num(0)
 					# elif isinstance(new.left,basic.Num) and isinstance(new.right,basic.Num):
 					# 	arrayNew[arrayNew.index(j)] = New(new.left.value**new.right.value)
 					else:
@@ -117,8 +129,10 @@ def sim_Mul(self):
 		if not done: # and i!=0  ?
 			arrayNew += [i]
 		array = array[1:]
-	if len(arrayNew)==0: return Num(1)
+	if len(arrayNew)==0: return basic.Num(1)
 	return basic.Mul(arrayNew)
+
+# def sim_Num(self):
 
 # def sim_Equation(self):
 # 	left = simplify(self.left); right = simplify(self.right)
@@ -138,6 +152,8 @@ def sim_Mul(self):
 
 def sim_Equation(self):
 	left = simplify(self.left); right = simplify(self.right)
+	return basic.Equation(left,right)
+
  	if not (isinstance(left,basic.Add) or isinstance(left,basic.Add)):
  		i1 = 0
  		if isinstance(left,basic.Mul):
@@ -173,7 +189,8 @@ def sim_Equation(self):
 			i1+=1
 		return basic.Equation(simplify(simplify(basic.Mul(list_i))),simplify(basic.Mul(list_j)))
 
-
+def sim_Num(self):
+	return self
 
 basic.Basic.simplify = sim_Basic
 basic.Var.simplify = sim_Basic
@@ -182,10 +199,11 @@ basic.Pow.simplify = sim_Pow
 basic.Add.simplify = sim_Add
 basic.Mul.simplify = sim_Mul
 basic.Equation.simplify = sim_Equation
+basic.Num.simplify = sim_Num
 
 def simplify(arg):
 	if issubclass(type(arg),basic.Basic) or isinstance(arg,basic.Equation):
-		return arg.simplify()
+		return arg.copy().simplify()
 	return arg
 
 def sort(arg):
@@ -239,6 +257,5 @@ def evaluate(expr,*args):
 	elif isinstance(expr,basic.Num):
 		return expr.value
 	return expr
-
 
 

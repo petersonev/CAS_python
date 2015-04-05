@@ -3,17 +3,17 @@ import functions
 
 def der_Basic(var):
 
-	return Num(0)
+	return basic.Num(0)
 
 def der_Var(self,var):
     if var==self:
-        return Num(1)
+        return basic.Num(1)
     else:
         return basic.Var('(dy/dx)')
 
 def der_Constant(self,var):
 	
-	return Num(0)
+	return basic.Num(0)
 
 def der_Pow(self, var):
     from functions import log
@@ -31,6 +31,9 @@ def der_Mul(self,var):
 def der_Equation(self,var):
     return basic.Equation(derivative(self.left),derivative(self.right))
 
+def der_Num(self,var):
+    return 0
+
 basic.Basic.derivative = der_Basic
 basic.Var.derivative = der_Var
 basic.Constant.derivative = der_Constant
@@ -38,6 +41,7 @@ basic.Pow.derivative = der_Pow
 basic.Add.derivative = der_Add
 basic.Mul.derivative = der_Mul
 basic.Equation.derivative = der_Equation
+basic.Num.derivative = der_Num
 
 
 def der_log(self,var):
@@ -60,4 +64,4 @@ functions.cos.derivative = der_cos
 def derivative(arg, var=basic.Var('x')):
     if issubclass(type(arg),basic.Basic):
         return arg.derivative(var)
-    return Num(0)
+    return basic.Num(0)
